@@ -7,6 +7,32 @@ import os
 import subprocess
 import json
 
+# 可选：查询 GPU 名称
+try:
+    import pynvml
+
+    pynvml.nvmlInit()
+    device_count = pynvml.nvmlDeviceGetCount()
+    DEVICE_NAMES: list[str] = []
+
+    for i in range(device_count):
+        handle = pynvml.nvmlDeviceGetHandleByIndex(i)
+        name = pynvml.nvmlDeviceGetName(handle).decode("utf-8").replace(" ", "_")
+        DEVICE_NAMES.append(name)
+
+    pynvml.nvmlShutdown()
+
+    if len(set(DEVICE_NAMES)) > 1:
+        print(f"Warning: different device names found: {DEVICE_NAMES}")
+
+    # 主 GPU 名字，沿用你之前的逻辑
+    DEVICE_NAME = DEVICE_NAMES[0] if DEVICE_NAMES else None
+
+except Exception as e:
+    print(f"Warning: failed to query GPU name via pynvml: {e}")
+    DEVICE_NAMES = []
+    DEVICE_NAME = None
+
 
 def handler(event):
     print("Worker Start")
@@ -71,6 +97,9 @@ def handler(event):
         "returncode": proc.returncode,
         "stdout": proc.stdout,
         "stderr": proc.stderr,
+        # 新增：GPU 信息
+        "gpu_name": DEVICE_NAME,
+        "gpu_names": DEVICE_NAMES,
     }
 
 
