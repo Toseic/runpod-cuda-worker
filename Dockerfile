@@ -1,20 +1,23 @@
 FROM nvidia/cuda:13.0.2-cudnn-devel-ubuntu24.04
 
-# 1. 装 Python 和 pip
+# 1. 安装 Python + venv
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        python3 python3-pip && \
+        python3 python3-pip python3-venv && \
     rm -rf /var/lib/apt/lists/*
 
-# 2. 工作目录随便选一个干净的
-WORKDIR /app
+# 2. 创建虚拟环境
+RUN python3 -m venv /opt/venv
+# 让后续命令都用 venv 里的 python/pip
+ENV PATH="/opt/venv/bin:$PATH"
 
-# 3. 拷贝依赖文件并安装
+# 3. 安装依赖
+WORKDIR /app
 COPY requirements.txt .
-RUN pip3 install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 # 4. 拷贝 handler
 COPY rp_handler.py .
 
-# 5. 启动容器
-CMD ["python3", "-u", "rp_handler.py"]
+# 5. 启动
+CMD ["python", "-u", "rp_handler.py"]
