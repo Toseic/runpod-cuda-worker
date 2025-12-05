@@ -36,7 +36,7 @@ def handler(event):
     )
 
     return {
-        "bin_path": bin_path,
+        "bin_path": str(bin_path),
         "args": args,
         "mode": mode,
         "returncode": proc.returncode,
